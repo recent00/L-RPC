@@ -1,23 +1,20 @@
 package com.scut.comsumer;
 
-import com.scut.framework.ProxyFactory;
-import com.scut.framework.protocol.Invocation;
-import com.scut.framework.protocol.http.HttpClient;
+import com.scut.framework.annotation.Component;
+import com.scut.framework.annotation.Reference;
+import com.scut.framework.core.RpcApplication;
 import com.scut.provider.api.HelloService;
 
-import java.util.HashMap;
 
+@Component
 public class Consumer {
 
+    @Reference
+    static HelloService helloService;
+
     public static void main(String[] args) {
-
-        HelloService helloService = ProxyFactory.getProxy(HelloService.class,"hadoop:2181");
-
+        new RpcApplication("com.scut.comsumer","application");
         String result = helloService.sayHello("lys");
         System.out.println(result);
-
-        result = helloService.sayHello("lys");
-        System.out.println(result);
-
     }
 }

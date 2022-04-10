@@ -1,9 +1,12 @@
 package com.scut.framework;
 
+import com.scut.framework.properties.RpcProperties;
 import com.scut.framework.protocol.*;
 import com.scut.framework.protocol.http.HttpClient;
 import com.scut.framework.register.RemoteMapRegister;
 import com.scut.framework.register.zookeeper.Discovery;
+import com.scut.framework.spi.api.impl.ExtensionLoader;
+import com.scut.framework.spi.bs.SpiBs;
 import com.scut.provider.api.HelloService;
 
 import java.lang.reflect.InvocationHandler;
@@ -36,7 +39,8 @@ public class ProxyFactory {
 
                     URL url = LoadBalance.random(map.get(interfaceClass.getName()));
                     System.out.println("------" + map.get(interfaceClass.getName()).size());
-                    Protocol protocol = ProtocolFactory.getProtocol();
+                    ExtensionLoader<Protocol> load = SpiBs.load(Protocol.class);
+                    Protocol protocol = load.getExtension(RpcProperties.protocol);
                     String result = protocol.send(url, invocation);
                     return result + url.getPort();
                 }catch (Exception e) {
