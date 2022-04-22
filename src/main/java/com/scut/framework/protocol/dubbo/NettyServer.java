@@ -1,6 +1,8 @@
 package com.scut.framework.protocol.dubbo;
 
 import com.scut.framework.protocol.Invocation;
+import com.scut.framework.protocol.dubbo.Json.JSONDecoder;
+import com.scut.framework.protocol.dubbo.Json.JSONEncoder;
 import com.scut.framework.protocol.dubbo.protostuff.ProtostuffDecoder;
 import com.scut.framework.protocol.dubbo.protostuff.ProtostuffEncoder;
 import io.netty.bootstrap.ServerBootstrap;
@@ -34,14 +36,15 @@ public class NettyServer {
 //                                    .weakCachingConcurrentResolver(this.getClass()
 //                                            .getClassLoader())));
 //                            pipeline.addLast("encoder", new ObjectEncoder());
-//                            pipeline.addLast(new LengthFieldBasedFrameDecoder(65535,
-//                                    0,2,0,
-//                                    2));
-//                            pipeline.addLast("decoder",new MsgPackDecoder());
-//                            pipeline.addLast(new LengthFieldPrepender(2));
-//                            pipeline.addLast(new MsgPackEncode());
-                            pipeline.addLast(new ProtostuffDecoder(Invocation.class));
-                            pipeline.addLast(new ProtostuffEncoder());
+                            /*粘包半包问题*/
+                            pipeline.addLast(new LengthFieldBasedFrameDecoder(65535,
+                                    0,2,0,
+                                    2));
+                            pipeline.addLast(new LengthFieldPrepender(2));
+//                            pipeline.addLast(new ProtostuffDecoder(Invocation.class));
+//                            pipeline.addLast(new ProtostuffEncoder());
+                            pipeline.addLast(new JSONDecoder(Invocation.class));
+                            pipeline.addLast(new JSONEncoder());
                             pipeline.addLast("handler", new NettyServerHandler());
                         }
                     });

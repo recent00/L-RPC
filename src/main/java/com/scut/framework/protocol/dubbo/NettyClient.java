@@ -2,6 +2,8 @@ package com.scut.framework.protocol.dubbo;
 
 
 import com.scut.framework.protocol.Invocation;
+import com.scut.framework.protocol.dubbo.Json.JSONDecoder;
+import com.scut.framework.protocol.dubbo.Json.JSONEncoder;
 import com.scut.framework.protocol.dubbo.protostuff.ProtostuffDecoder;
 import com.scut.framework.protocol.dubbo.protostuff.ProtostuffEncoder;
 import io.netty.bootstrap.Bootstrap;
@@ -41,8 +43,14 @@ public class NettyClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast(new ProtostuffDecoder(Invocation.class));
-                        pipeline.addLast(new ProtostuffEncoder());
+                        pipeline.addLast(new LengthFieldBasedFrameDecoder(65535,
+                                0,2,0,
+                                2));
+                        pipeline.addLast(new LengthFieldPrepender(2));
+//                        pipeline.addLast(new ProtostuffDecoder(Invocation.class));
+//                        pipeline.addLast(new ProtostuffEncoder());
+                        pipeline.addLast(new JSONDecoder(Invocation.class));
+                        pipeline.addLast(new JSONEncoder());
                         pipeline.addLast("handler", client);
                     }
                 });
