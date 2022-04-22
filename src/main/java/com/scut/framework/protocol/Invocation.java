@@ -20,5 +20,6 @@ public class Invocation implements Serializable {
     private String methodName;
     private Class[] paramTypes;
     private Object[] params;
+    private Object msg;
 
 }

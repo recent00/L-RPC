@@ -27,7 +27,7 @@ public class ProxyFactory {
             public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
                 try {
 
-                    Invocation invocation = new Invocation(interfaceClass.getName(), method.getName(), method.getParameterTypes(), args);
+                    Invocation invocation = new Invocation(interfaceClass.getName(), method.getName(), method.getParameterTypes(), args,"");
 
                     //List<URL> urls = RemoteMapRegister.get(interfaceClass.getName());
                     List<URL> urls;

@@ -2,6 +2,8 @@ package com.scut.framework.protocol.dubbo;
 
 
 import com.scut.framework.protocol.Invocation;
+import com.scut.framework.protocol.dubbo.protostuff.ProtostuffDecoder;
+import com.scut.framework.protocol.dubbo.protostuff.ProtostuffEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -10,6 +12,9 @@ import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
+import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
+import io.netty.handler.codec.LengthFieldPrepender;
+import io.netty.handler.codec.LineBasedFrameDecoder;
 import io.netty.handler.codec.serialization.ClassResolvers;
 import io.netty.handler.codec.serialization.ObjectDecoder;
 import io.netty.handler.codec.serialization.ObjectEncoder;
@@ -36,10 +41,8 @@ public class NettyClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
-                        pipeline.addLast("decoder", new ObjectDecoder(ClassResolvers
-                                .weakCachingConcurrentResolver(this.getClass()
-                                        .getClassLoader())));
-                        pipeline.addLast("encoder", new ObjectEncoder());
+                        pipeline.addLast(new ProtostuffDecoder(Invocation.class));
+                        pipeline.addLast(new ProtostuffEncoder());
                         pipeline.addLast("handler", client);
                     }
                 });
