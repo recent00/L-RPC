@@ -1,7 +1,10 @@
-package com.scut.framework.protocol.dubbo;
+package com.scut.framework.protocol.dubbo.server;
 
 import com.scut.framework.protocol.Invocation;
 import com.scut.framework.protocol.dubbo.protostuff.ProtostuffUtil;
+import com.scut.framework.protocol.dubbo.vo.MessageType;
+import com.scut.framework.protocol.dubbo.vo.MsgHeader;
+import com.scut.framework.protocol.dubbo.vo.MyMessage;
 import com.scut.framework.register.LocalRegister;
 import io.netty.buffer.ByteBuf;
 import io.netty.buffer.Unpooled;
@@ -14,17 +17,25 @@ public class NettyServerHandler extends ChannelInboundHandlerAdapter {
 
     @Override
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-
-        Invocation invocation = (Invocation) msg;
-
+        MyMessage myMsg = (MyMessage)msg;
+        Invocation invocation = myMsg.getBody();
         Class serviceImpl = LocalRegister.get(invocation.getInterfaceName());
 
         Method method = serviceImpl.getMethod(invocation.getMethodName(), invocation.getParamTypes());
         Object result = method.invoke(serviceImpl.newInstance(), invocation.getParams());
 
-        //buf = Unpooled.copiedBuffer(ProtostuffUtil.serializer(result));
         invocation.setMsg("Netty:" + result);
+        MyMessage message = buildMsg(invocation);
         System.out.println("Netty-------------" + result.toString());
-        ctx.writeAndFlush(invocation);
+        ctx.writeAndFlush(message);
+    }
+
+    private MyMessage buildMsg(Invocation invocation) {
+        MyMessage message = new MyMessage();
+        MsgHeader msgHeader = new MsgHeader();
+        msgHeader.setType(MessageType.SERVICE_REQ.value());
+        message.setMsgHeader(msgHeader);
+        message.setBody(invocation);
+        return message;
     }
 }

@@ -1,15 +1,16 @@
-package com.scut.framework.protocol.dubbo;
+package com.scut.framework.protocol.dubbo.client;
 
 import com.scut.framework.protocol.Invocation;
-import com.scut.framework.protocol.dubbo.protostuff.ProtostuffUtil;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import com.scut.framework.protocol.dubbo.vo.MessageType;
+import com.scut.framework.protocol.dubbo.vo.MsgHeader;
+import com.scut.framework.protocol.dubbo.vo.MyMessage;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInboundHandlerAdapter;
 
 import java.util.concurrent.Callable;
 
 public class NettyClientHandler extends ChannelInboundHandlerAdapter implements Callable {
+
 
     private ChannelHandlerContext context;
     private Invocation invocation;
@@ -22,16 +23,28 @@ public class NettyClientHandler extends ChannelInboundHandlerAdapter implements 
 
     @Override
     public synchronized void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        invocation = (Invocation)msg;
+        MyMessage myMsg = (MyMessage)msg;
+        invocation = myMsg.getBody();
         result = invocation.getMsg().toString();
         notify();
     }
 
     @Override
     public synchronized Object call() throws Exception {
-        context.writeAndFlush(this.invocation);
+        MyMessage msg = buildMsg();
+        context.writeAndFlush(msg);
         wait();
         return result;
+    }
+
+
+    private MyMessage buildMsg() {
+        MyMessage message = new MyMessage();
+        MsgHeader msgHeader = new MsgHeader();
+        msgHeader.setType(MessageType.SERVICE_REQ.value());
+        message.setMsgHeader(msgHeader);
+        message.setBody(invocation);
+        return message;
     }
 
     public void setInvocation(Invocation invocation) {

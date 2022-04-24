@@ -1,4 +1,4 @@
-package com.scut.framework.protocol.dubbo;
+package com.scut.framework.protocol.dubbo.client;
 
 
 import com.scut.framework.protocol.Invocation;
@@ -6,6 +6,7 @@ import com.scut.framework.protocol.dubbo.Json.JSONDecoder;
 import com.scut.framework.protocol.dubbo.Json.JSONEncoder;
 import com.scut.framework.protocol.dubbo.protostuff.ProtostuffDecoder;
 import com.scut.framework.protocol.dubbo.protostuff.ProtostuffEncoder;
+import com.scut.framework.protocol.dubbo.vo.MyMessage;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelOption;
@@ -16,12 +17,9 @@ import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioSocketChannel;
 import io.netty.handler.codec.LengthFieldBasedFrameDecoder;
 import io.netty.handler.codec.LengthFieldPrepender;
-import io.netty.handler.codec.LineBasedFrameDecoder;
-import io.netty.handler.codec.serialization.ClassResolvers;
-import io.netty.handler.codec.serialization.ObjectDecoder;
-import io.netty.handler.codec.serialization.ObjectEncoder;
+import io.netty.handler.timeout.IdleStateHandler;
+import io.netty.handler.timeout.ReadTimeoutHandler;
 
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -43,14 +41,32 @@ public class NettyClient {
                 .handler(new ChannelInitializer<SocketChannel>() {
                     protected void initChannel(SocketChannel socketChannel) throws Exception {
                         ChannelPipeline pipeline = socketChannel.pipeline();
+
+                        /*连接写空闲检测*/
+                        pipeline.addLast(new IdleStateHandler(0,8,0));
+
+                        /*粘包半包问题*/
                         pipeline.addLast(new LengthFieldBasedFrameDecoder(65535,
                                 0,2,0,
                                 2));
                         pipeline.addLast(new LengthFieldPrepender(2));
-//                        pipeline.addLast(new ProtostuffDecoder(Invocation.class));
-//                        pipeline.addLast(new ProtostuffEncoder());
-                        pipeline.addLast(new JSONDecoder(Invocation.class));
-                        pipeline.addLast(new JSONEncoder());
+                        pipeline.addLast(new ProtostuffDecoder(MyMessage.class));
+                        pipeline.addLast(new ProtostuffEncoder());
+
+                        /*序列化相关*/
+//                        pipeline.addLast(new JSONDecoder(MyMessage.class));
+//                        pipeline.addLast(new JSONEncoder());
+//                        pipeline.addLast("decoder", new ObjectDecoder(ClassResolvers
+//                                .weakCachingConcurrentResolver(this.getClass()
+//                                        .getClassLoader())));
+//                        pipeline.addLast("encoder", new ObjectEncoder());
+
+                        /*连接读空闲检测*/
+                        pipeline.addLast(new ReadTimeoutHandler(15));
+                        /*向服务器发出心跳请求*/
+                        pipeline.addLast(new HearBeatReqHandler());
+
+                        /*业务处理*/
                         pipeline.addLast("handler", client);
                     }
                 });

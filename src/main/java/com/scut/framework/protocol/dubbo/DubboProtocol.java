@@ -3,6 +3,8 @@ package com.scut.framework.protocol.dubbo;
 import com.scut.framework.protocol.Invocation;
 import com.scut.framework.protocol.Protocol;
 import com.scut.framework.protocol.URL;
+import com.scut.framework.protocol.dubbo.client.NettyClient;
+import com.scut.framework.protocol.dubbo.server.NettyServer;
 
 public class DubboProtocol implements Protocol {
     @Override
