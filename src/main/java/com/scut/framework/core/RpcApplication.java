@@ -4,6 +4,7 @@ import com.scut.framework.ProxyFactory;
 import com.scut.framework.annotation.Component;
 import com.scut.framework.annotation.Reference;
 import com.scut.framework.annotation.Service;
+import com.scut.framework.loadbalance.LoadBalancer;
 import com.scut.framework.properties.RpcProperties;
 import com.scut.framework.protocol.Protocol;
 import com.scut.framework.protocol.URL;
@@ -26,6 +27,8 @@ public class RpcApplication {
     URL url;
     private Map<String,BeanDefinition> beanDefinitionMap = new HashMap<String,BeanDefinition>();
     private Map<String,Object> singletonObjects = new HashMap<String, Object>();//单例池
+
+    public RpcApplication() {}
 
     public RpcApplication(String path,String configPath) {
         config(configPath);//解析配置文件
@@ -61,7 +64,7 @@ public class RpcApplication {
         return singletonBean;
     }
 
-    private Object createBean(String beanName, BeanDefinition beanDefinition) {
+    private static Object createBean(String beanName, BeanDefinition beanDefinition) {
         Class clazz = beanDefinition.getType();
 
         Object instance = null;
@@ -144,6 +147,7 @@ public class RpcApplication {
         RpcProperties.port = conf.getString("lys.rpc.port");
         RpcProperties.protocol = conf.getString("lys.rpc.protocol");
         RpcProperties.registerAddress = conf.getString("lys.rpc.register-address");
+        RpcProperties.loadbalancer = conf.getString("lys.rpc.loadbalancer");
         url = new URL(RpcProperties.hostName,Integer.parseInt(RpcProperties.port));
     }
 

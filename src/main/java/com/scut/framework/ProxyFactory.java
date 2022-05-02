@@ -1,5 +1,7 @@
 package com.scut.framework;
 
+import com.scut.framework.core.RpcApplication;
+import com.scut.framework.loadbalance.LoadBalancer;
 import com.scut.framework.properties.RpcProperties;
 import com.scut.framework.protocol.*;
 import com.scut.framework.protocol.http.HttpClient;
@@ -20,6 +22,9 @@ import java.util.Map;
 public class ProxyFactory {
 
     public static Map<String,List<URL>> map = new HashMap<>();//本地服务列表
+
+    public static LoadBalancer loadBalancer;
+
     @SuppressWarnings("unchecked")
     public static <T> T getProxy(final Class interfaceClass,String address) {
         return (T) Proxy.newProxyInstance(interfaceClass.getClassLoader(), new Class[]{interfaceClass}, new InvocationHandler() {
@@ -37,7 +42,22 @@ public class ProxyFactory {
                         map.put(interfaceClass.getName(),urls);
                     }
 
-                    URL url = LoadBalance.random(map.get(interfaceClass.getName()));
+                    if(loadBalancer == null) {
+                        ExtensionLoader<LoadBalancer> lb = SpiBs.load(LoadBalancer.class);
+                        loadBalancer = lb.getExtension(RpcProperties.loadbalancer);
+                    }
+
+                    if(loadBalancer == null) {
+                        throw new RuntimeException("缺少负载均衡器");
+                    }
+
+                    //URL url = LoadBalance.random(map.get(interfaceClass.getName()));
+                    URL url = loadBalancer.instance(map.get(interfaceClass.getName()));
+
+                    if(url == null) {
+                        throw new RuntimeException("未找到相应服务");
+                    }
+
                     System.out.println("------" + map.get(interfaceClass.getName()).size());
                     ExtensionLoader<Protocol> load = SpiBs.load(Protocol.class);
                     Protocol protocol = load.getExtension(RpcProperties.protocol);

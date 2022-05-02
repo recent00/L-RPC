@@ -16,5 +16,8 @@ public class Consumer {
         new RpcApplication("com.scut.comsumer","application");
         String result = helloService.sayHello("lys");
         System.out.println(result);
+
+        String result1 = helloService.sayHello("lys");
+        System.out.println(result1);
     }
 }

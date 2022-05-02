@@ -1,0 +1,2 @@
+random=com.scut.framework.loadbalance.Random
+roundrobin=com.scut.framework.loadbalance.RoundRobin
